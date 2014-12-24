@@ -1,8 +1,8 @@
 {
   "targets": [
     {
-      "target_name": "addon",
-      "sources": [ "addon.cc", "framebuffer.cc" ],
+      "target_name": "pitft",
+      "sources": [ "src/pitft.cc", "src/framebuffer.cc" ],
       "include_dirs": [
         "<!(node -e \"require('nan')\")"
       ]

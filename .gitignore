@@ -9,5 +9,5 @@
 .LSOverride
 ._*
 
-build/Release
+build/
 node_modules
