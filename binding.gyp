@@ -2,10 +2,21 @@
   "targets": [
     {
       "target_name": "pitft",
-      "sources": [ "src/pitft.cc", "src/framebuffer.cc" ],
       "include_dirs": [
-        "<!(node -e \"require('nan')\")"
-      ]
+        "<!(node -e \"require('nan')\")",
+        "<!@(pkg-config cairo --cflags-only-I | sed s/-I//g)"
+      ],
+      "sources": [ "src/pitft.cc", "src/framebuffer.cc" ],
+      "conditions": [
+        ['OS=="linux"', {
+          "libraries": [
+            "<!@(pkg-config cairo --libs)"
+          ],
+                    "include_dirs": [
+                      "<!@(pkg-config cairo --cflags-only-I | sed s/-I//g)"
+                    ]
+        }]
+        ]
     }
   ]
 }

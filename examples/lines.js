@@ -16,9 +16,10 @@ for (var n=0; n<10000; n++) {
     x1 = parseInt(Math.random() * xMax, 10);
     y1 = parseInt(Math.random() * yMax, 10);
 
-    r = parseInt(Math.random() * 255, 10);
-    g = parseInt(Math.random() * 255, 10);
-    b = parseInt(Math.random() * 255, 10);
+    r = Math.random();
+    g = Math.random();
+    b = Math.random();
 
-    fb.line(x0, y0, x1, y1, r, g, b);
+    fb.color(r, g, b);
+    fb.line(x0, y0, x1, y1, 1, r, g, b);
 }

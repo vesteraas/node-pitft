@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include <linux/fb.h>
 #include <sys/mman.h>
+#include <cairo/cairo.h>
 
 #include <nan.h>
 
@@ -24,6 +25,7 @@ class FrameBuffer : public node::ObjectWrap {
         static NAN_METHOD(Size);
         static NAN_METHOD(Data);
         static NAN_METHOD(Clear);
+        static NAN_METHOD(Color);
         static NAN_METHOD(Fill);
         static NAN_METHOD(Line);
         static NAN_METHOD(Rect);
@@ -36,6 +38,10 @@ class FrameBuffer : public node::ObjectWrap {
         struct fb_fix_screeninfo finfo;
         long int screensize;
         char *fbp;
+
+        cairo_surface_t *surface;
+
+        double r, g, b;
 };
 
 #endif

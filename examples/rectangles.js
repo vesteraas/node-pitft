@@ -20,9 +20,10 @@ for (var n=0; n<1000; n++) {
         h = parseInt(Math.random() * yMax, 10);
     } while ((y + h) >= yMax)
 
-    r = parseInt(Math.random() * 255, 10);
-    g = parseInt(Math.random() * 255, 10);
-    b = parseInt(Math.random() * 255, 10);
+    r = Math.random();
+    g = Math.random();
+    b = Math.random();
 
-    fb.rect(x, y, w, h, r, g, b);
+    fb.color(r, g, b);
+    fb.rect(x, y, w, h, true);
 }

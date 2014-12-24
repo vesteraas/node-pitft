@@ -7,16 +7,17 @@ fb.clear();
 var xMax = fb.size().width;
 var yMax = fb.size().height;
 
-for (var n = 0; n < 1000; n++) {
+for (var n=0; n<1000; n++) {
     var x, y, radius, r, g, b;
 
     x = parseInt(Math.random() * xMax, 10);
     y = parseInt(Math.random() * yMax, 10);
     radius = parseInt(Math.random() * yMax / 2, 10);
 
-    r = parseInt(Math.random() * 255, 10);
-    g = parseInt(Math.random() * 255, 10);
-    b = parseInt(Math.random() * 255, 10);
+    r = Math.random();
+    g = Math.random();
+    b = Math.random();
 
-    fb.circle(x, y, radius, r, g, b);
+    fb.color(r, g, b);
+    fb.circle(x, y, radius, false, 5);
 }
