@@ -6,20 +6,27 @@ Persistent<Function> FrameBuffer::constructor;
 
 FrameBuffer::FrameBuffer(const char *path) {
     fbfd = open(path, O_RDWR);
+    if (fbfd == -1) {
+        NanThrowError("Error opening framebuffer device");
+        return;
+    }
 
     if (ioctl(fbfd, FBIOGET_VSCREENINFO, &vinfo)) {
-        printf("Error reading variable information.\n");
+        NanThrowError("Error retrieving data from framebuffer");
+        return;
     }
     
     memcpy(&orig_vinfo, &vinfo, sizeof(struct fb_var_screeninfo));
 
     vinfo.bits_per_pixel = 8;
     if (ioctl(fbfd, FBIOPUT_VSCREENINFO, &vinfo)) {
-        printf("Error setting variable information.\n");
+        NanThrowError("Error sending data to framebuffer");
+        return;
     }
 
     if (ioctl(fbfd, FBIOGET_FSCREENINFO, &finfo)) {
-        printf("Error reading fixed information.\n");
+        NanThrowError("Error retrieving data from framebuffer");
+        return;
     }
 
     screensize = finfo.smem_len;
@@ -29,20 +36,30 @@ FrameBuffer::FrameBuffer(const char *path) {
                       MAP_SHARED, 
                       fbfd, 
                       0);
+
+    if ((int)fbp == -1) {
+        NanThrowError("Error during memory mapping");
+        return;
+    }
 }
 
 FrameBuffer::~FrameBuffer() {
-    munmap(fbp, screensize);
-    if (ioctl(fbfd, FBIOPUT_VSCREENINFO, &orig_vinfo)) {
-        printf("Error re-setting variable information.\n");
+    if ((int)fbp != -1) {
+        munmap(fbp, screensize);
+
+        if (ioctl(fbfd, FBIOPUT_VSCREENINFO, &orig_vinfo)) {
+            NanThrowError("Error restoring framebuffer state");
+        }
     }
-    close(fbfd);
+
+    if (fbfd != -1) {
+        close(fbfd);
+    }
 }
 
 void FrameBuffer::Init(Handle<Object> exports) {
     NanScope();
 
-    // Prepare constructor template
     Local<FunctionTemplate> tpl = NanNew<FunctionTemplate>(New);
     tpl->SetClassName(NanNew("FrameBuffer"));
     tpl->InstanceTemplate()->SetInternalFieldCount(1);
@@ -61,14 +78,12 @@ NAN_METHOD(FrameBuffer::New) {
     NanScope();
 
     if (args.IsConstructCall()) {
-        // Invoked as constructor: `new FrameBuffer()`
         v8::String::Utf8Value path(args[0]->ToString());
         std::string _path = std::string(*path);
         FrameBuffer* obj = new FrameBuffer(_path.c_str());
         obj->Wrap(args.This());
         NanReturnValue(args.This());
     } else {
-        // Invoked as plain function `FrameBuffer()`, turn into construct call.
         const int argc = 1;
         Local<Value> argv[argc] = { args[0] };
         Local<Function> cons = NanNew<Function>(constructor);
@@ -167,15 +182,18 @@ NAN_METHOD(FrameBuffer::Circle) {
     int yChange = 0;
     int radiusError = 0;
 
+    int xMax = obj->vinfo.xres;
+    int yMax = obj->vinfo.yres;
+
     while (x >= y) {
         for (int i = x0 - x; i <= x0 + x; i++) {
-            if (i>=0 && i<320) {
-                if (((y0 + y)>=0) && ((y0 + y)<320)) {
+            if (i>=0 && i<xMax) {
+                if (((y0 + y)>=0) && ((y0 + y)<yMax)) {
                     unsigned int pix_offset = i * 2 + (y0 + y) * obj->finfo.line_length;
                     *((unsigned short*)(obj->fbp + pix_offset)) = c;
                 }
 
-                if (((y0 - y)>=0) && ((y0 - y)<320)) {
+                if (((y0 - y)>=0) && ((y0 - y)<yMax)) {
                     unsigned int pix_offset = i * 2 + (y0 - y) * obj->finfo.line_length;
                     *((unsigned short*)(obj->fbp + pix_offset)) = c;
                 }
@@ -183,13 +201,13 @@ NAN_METHOD(FrameBuffer::Circle) {
         }
 
         for (int i = x0 - y; i <= x0 + y; i++) {
-            if (i>=0 && i<320) {
-                if (((y0 + x)>=0) && ((y0 + x)<320)) {
+            if (i>=0 && i<xMax) {
+                if (((y0 + x)>=0) && ((y0 + x)<yMax)) {
                     unsigned int pix_offset = i * 2 + (y0 + x) * obj->finfo.line_length;
                     *((unsigned short*)(obj->fbp + pix_offset)) = c;
                 }
 
-                if (((y0 - x)>=0) && ((y0 - x)<320)) {
+                if (((y0 - x)>=0) && ((y0 - x)<yMax)) {
                     unsigned int pix_offset = i * 2 + (y0 - x) * obj->finfo.line_length;
                     *((unsigned short*)(obj->fbp + pix_offset)) = c;
                 }
