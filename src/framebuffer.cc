@@ -78,6 +78,8 @@ void FrameBuffer::Init(Handle<Object> exports) {
     NODE_SET_PROTOTYPE_METHOD(tpl, "line", Line);
     NODE_SET_PROTOTYPE_METHOD(tpl, "rect", Rect);
     NODE_SET_PROTOTYPE_METHOD(tpl, "circle", Circle);
+    NODE_SET_PROTOTYPE_METHOD(tpl, "font", Font);
+    NODE_SET_PROTOTYPE_METHOD(tpl, "text", Text);
 
     NanAssignPersistent(constructor, tpl->GetFunction());
     exports->Set(NanNew("FrameBuffer"), tpl->GetFunction());
@@ -248,3 +250,48 @@ NAN_METHOD(FrameBuffer::Circle) {
 
     NanReturnUndefined();
 }
+
+NAN_METHOD(FrameBuffer::Font) {
+    NanScope();
+
+    FrameBuffer *obj = ObjectWrap::Unwrap<FrameBuffer>(args.Holder());
+
+    v8::String::Utf8Value fontName(args[0]->ToString());
+    std::string _fontName = std::string(*fontName);
+
+    obj->fontName = _fontName.c_str();
+    obj->fontSize = args[1]->IsUndefined() ? 12 : (int)args[1]->NumberValue();
+
+    NanReturnUndefined();
+}
+
+NAN_METHOD(FrameBuffer::Text) {
+    NanScope();
+
+    double x = (args[0]->NumberValue());
+    double y = (args[1]->NumberValue());
+
+    v8::String::Utf8Value text(args[2]->ToString());
+    std::string _text = std::string(*text);
+
+    FrameBuffer *obj = ObjectWrap::Unwrap<FrameBuffer>(args.Holder());
+
+    cairo_t *cr = cairo_create(obj->surface);
+
+    cairo_set_source_rgb(cr, obj->r, obj->g, obj->b);
+
+    cairo_select_font_face(cr, obj->fontName,
+          CAIRO_FONT_SLANT_NORMAL,
+          CAIRO_FONT_WEIGHT_BOLD);
+
+    cairo_set_font_size(cr, obj->fontSize);
+
+    cairo_move_to(cr, x, y);
+
+    cairo_show_text(cr, _text.c_str());
+
+    cairo_destroy(cr);
+
+    NanReturnUndefined();
+}
+

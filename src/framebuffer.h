@@ -30,6 +30,8 @@ class FrameBuffer : public node::ObjectWrap {
         static NAN_METHOD(Line);
         static NAN_METHOD(Rect);
         static NAN_METHOD(Circle);
+        static NAN_METHOD(Font);
+        static NAN_METHOD(Text);
         static v8::Persistent<v8::Function> constructor;
 
         int fbfd;
@@ -42,6 +44,9 @@ class FrameBuffer : public node::ObjectWrap {
         cairo_surface_t *surface;
 
         double r, g, b;
+
+        double fontSize;
+        const char *fontName;
 };
 
 #endif

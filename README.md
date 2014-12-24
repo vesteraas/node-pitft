@@ -3,7 +3,7 @@ pitft
 
 ### A [NodeJS](http://nodejs.org) module for the Adafruit PiTFT family of displays for the [Raspberry Pi](http://www.raspberrypi.org) computer.
 
-This library is only tested on the [2.8" PiTFT](http://www.adafruit.com/product/1601) but should work on other displays from Adafruit.
+This module is only tested on the [2.8" PiTFT](http://www.adafruit.com/product/1601) but should work on other displays from Adafruit.
 
 ## Author
   - Werner Vesterås <wvesteraas@gmail.com>

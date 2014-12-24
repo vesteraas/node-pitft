@@ -7,7 +7,7 @@ fb.clear();
 var xMax = fb.size().width;
 var yMax = fb.size().height;
 
-for (var n=0; n<10000; n++) {
+for (var n=0; n<1000; n++) {
     var x0, y0, x1, y1, r, g, b;
 
     x0 = parseInt(Math.random() * xMax, 10);
