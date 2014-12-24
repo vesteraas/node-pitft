@@ -65,6 +65,7 @@ void FrameBuffer::Init(Handle<Object> exports) {
     tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
     NODE_SET_PROTOTYPE_METHOD(tpl, "size", Size);
+    NODE_SET_PROTOTYPE_METHOD(tpl, "data", Data);
     NODE_SET_PROTOTYPE_METHOD(tpl, "clear", Clear);
     NODE_SET_PROTOTYPE_METHOD(tpl, "fill", Fill);
     NODE_SET_PROTOTYPE_METHOD(tpl, "line", Line);
@@ -103,6 +104,16 @@ NAN_METHOD(FrameBuffer::Size) {
     sizeObject->Set(NanNew<String>("height"), NanNew<Number>(obj->vinfo.yres));
 
     NanReturnValue(sizeObject);
+}
+
+NAN_METHOD(FrameBuffer::Data) {
+    NanScope();
+
+    FrameBuffer* obj = ObjectWrap::Unwrap<FrameBuffer>(args.Holder());
+
+    Local<Object> bufferObject = NanNewBufferHandle(obj->fbp, obj->screensize);
+
+    NanReturnValue(bufferObject);
 }
 
 NAN_METHOD(FrameBuffer::Clear) {
