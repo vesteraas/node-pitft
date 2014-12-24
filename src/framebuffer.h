@@ -45,8 +45,9 @@ class FrameBuffer : public node::ObjectWrap {
 
         double r, g, b;
 
-        double fontSize;
         const char *fontName;
+        double fontSize;
+        double textRotation;
 };
 
 #endif

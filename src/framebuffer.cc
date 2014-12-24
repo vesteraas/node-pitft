@@ -260,7 +260,8 @@ NAN_METHOD(FrameBuffer::Font) {
     std::string _fontName = std::string(*fontName);
 
     obj->fontName = _fontName.c_str();
-    obj->fontSize = args[1]->IsUndefined() ? 12 : (int)args[1]->NumberValue();
+    obj->fontSize = args[1]->IsUndefined() ? 12 : args[1]->NumberValue();
+    obj->textRotation = args[2]->IsUndefined() ? 0 : args[2]->NumberValue();
 
     NanReturnUndefined();
 }
@@ -282,11 +283,15 @@ NAN_METHOD(FrameBuffer::Text) {
 
     cairo_select_font_face(cr, obj->fontName,
           CAIRO_FONT_SLANT_NORMAL,
-          CAIRO_FONT_WEIGHT_BOLD);
+          CAIRO_FONT_WEIGHT_NORMAL);
 
     cairo_set_font_size(cr, obj->fontSize);
 
     cairo_move_to(cr, x, y);
+
+    if (obj->textRotation != 0) {
+        cairo_rotate(cr, obj->textRotation / 57.29);
+    }
 
     cairo_show_text(cr, _text.c_str());
 
