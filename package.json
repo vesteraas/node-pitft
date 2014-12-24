@@ -2,7 +2,7 @@
   "name": "pitft",
   "description": "A C++ extension for node.js that gives javascript access to the PiTFT framebuffer",
   "version": "0.0.1",
-  "main": "index.js",
+  "main": "./pitft",
   "author": "Werner Vesteraas <wvesteraas@gmail.com>",
   "license": {
     "type": "MIT",
