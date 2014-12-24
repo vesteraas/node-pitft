@@ -4,18 +4,21 @@ var fb = new pitft.FrameBuffer("/dev/fb1");
 
 fb.clear();
 
+var xMax = fb.size().width;
+var yMax = fb.size().height;
+
 for (var n=0; n<1000; n++) {
     var x, y, w, h, r, g, b;
 
     do {
-        x = parseInt(Math.random() * 320, 10);
-        w = parseInt(Math.random() * 320, 10);
-    } while ((x + w) >= 320)
+        x = parseInt(Math.random() * xMax, 10);
+        w = parseInt(Math.random() * xMax, 10);
+    } while ((x + w) >= xMax)
 
     do {
-        y = parseInt(Math.random() * 240, 10);
-        h = parseInt(Math.random() * 240, 10);
-    } while ((y + h) >= 240)
+        y = parseInt(Math.random() * yMax, 10);
+        h = parseInt(Math.random() * yMax, 10);
+    } while ((y + h) >= yMax)
 
     r = parseInt(Math.random() * 255, 10);
     g = parseInt(Math.random() * 255, 10);

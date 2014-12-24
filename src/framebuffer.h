@@ -21,9 +21,10 @@ class FrameBuffer : public node::ObjectWrap {
         ~FrameBuffer();
 
         static NAN_METHOD(New);
-        static NAN_METHOD(Dimension);
+        static NAN_METHOD(Size);
         static NAN_METHOD(Clear);
         static NAN_METHOD(Fill);
+        static NAN_METHOD(Line);
         static NAN_METHOD(Rect);
         static NAN_METHOD(Circle);
         static v8::Persistent<v8::Function> constructor;

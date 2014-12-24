@@ -64,11 +64,12 @@ void FrameBuffer::Init(Handle<Object> exports) {
     tpl->SetClassName(NanNew("FrameBuffer"));
     tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
+    NODE_SET_PROTOTYPE_METHOD(tpl, "size", Size);
     NODE_SET_PROTOTYPE_METHOD(tpl, "clear", Clear);
     NODE_SET_PROTOTYPE_METHOD(tpl, "fill", Fill);
+    NODE_SET_PROTOTYPE_METHOD(tpl, "line", Line);
     NODE_SET_PROTOTYPE_METHOD(tpl, "rect", Rect);
     NODE_SET_PROTOTYPE_METHOD(tpl, "circle", Circle);
-    NODE_SET_PROTOTYPE_METHOD(tpl, "dimension", Dimension);
 
     NanAssignPersistent(constructor, tpl->GetFunction());
     exports->Set(NanNew("FrameBuffer"), tpl->GetFunction());
@@ -91,17 +92,17 @@ NAN_METHOD(FrameBuffer::New) {
     }
 }
 
-NAN_METHOD(FrameBuffer::Dimension) {
+NAN_METHOD(FrameBuffer::Size) {
     NanScope();
 
     FrameBuffer* obj = ObjectWrap::Unwrap<FrameBuffer>(args.Holder());
 
-    Local<Object> dimensionObject = NanNew<Object>();
+    Local<Object> sizeObject = NanNew<Object>();
 
-    dimensionObject->Set(NanNew<String>("width"), NanNew<Number>(obj->vinfo.xres));
-    dimensionObject->Set(NanNew<String>("height"), NanNew<Number>(obj->vinfo.yres));
+    sizeObject->Set(NanNew<String>("width"), NanNew<Number>(obj->vinfo.xres));
+    sizeObject->Set(NanNew<String>("height"), NanNew<Number>(obj->vinfo.yres));
 
-    NanReturnValue(dimensionObject);
+    NanReturnValue(sizeObject);
 }
 
 NAN_METHOD(FrameBuffer::Clear) {
@@ -155,6 +156,48 @@ NAN_METHOD(FrameBuffer::Rect) {
         for (int _y=y; _y<y+h; _y++) {
             unsigned int pix_offset = _x * 2 + _y * obj->finfo.line_length;
             *((unsigned short*)(obj->fbp + pix_offset)) = c;
+        }
+    }
+
+    NanReturnUndefined();
+}
+
+NAN_METHOD(FrameBuffer::Line) {
+    NanScope();
+
+    FrameBuffer* obj = ObjectWrap::Unwrap<FrameBuffer>(args.Holder());
+
+    int x0 = (int)(args[0]->NumberValue());
+    int y0 = (int)(args[1]->NumberValue());
+    int x1 = (int)(args[2]->NumberValue());
+    int y1 = (int)(args[3]->NumberValue());
+
+    int r = (int)(args[4]->NumberValue());
+    int g = (int)(args[5]->NumberValue());
+    int b = (int)(args[6]->NumberValue());
+
+    unsigned short c = ((r / 8) << 11) + ((g / 4) << 5) + (b / 8);
+
+    int dx = abs(x1-x0), sx = x0<x1 ? 1 : -1;
+    int dy = abs(y1-y0), sy = y0<y1 ? 1 : -1;
+    int err = (dx>dy ? dx : -dy)/2, e2;
+
+    for(;;){
+        unsigned int pix_offset = x0 * 2 + y0 * obj->finfo.line_length;
+        *((unsigned short*)(obj->fbp + pix_offset)) = c;
+
+        if (x0==x1 && y0==y1) {
+             break;
+        }
+
+        e2 = err;
+
+        if (e2 >-dx) {
+            err -= dy; x0 += sx;
+        }
+
+        if (e2 < dy) {
+            err += dx; y0 += sy;
         }
     }
 
