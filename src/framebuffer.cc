@@ -2,13 +2,12 @@
 
 using namespace v8;
 
-Persistent<FunctionTemplate> FrameBuffer::constructor;
+Persistent<Function> FrameBuffer::constructor;
 
-void FrameBuffer::Init(Handle<Object> exports) {
+void FrameBuffer::Init() {
     NanScope();
 
     Local<FunctionTemplate> ctor = NanNew<FunctionTemplate>(FrameBuffer::New);
-    NanAssignPersistent(constructor, ctor);
     ctor->InstanceTemplate()->SetInternalFieldCount(1);
     ctor->SetClassName(NanNew("FrameBuffer"));
 
@@ -25,7 +24,17 @@ void FrameBuffer::Init(Handle<Object> exports) {
     NODE_SET_PROTOTYPE_METHOD(ctor, "text", Text);
     NODE_SET_PROTOTYPE_METHOD(ctor, "image", Image);
 
-    exports->Set(NanNew("FrameBuffer"), ctor->GetFunction());
+    constructor = Persistent<Function>::New(ctor->GetFunction());
+}
+
+NAN_METHOD(FrameBuffer::NewInstance) {
+  HandleScope scope;
+
+  const unsigned argc = 2;
+  Handle<Value> argv[2] = { args[0], args[1] };
+  Local<Object> instance = constructor->NewInstance(argc, argv);
+
+  NanReturnValue(instance);
 }
 
 NAN_METHOD(FrameBuffer::New) {
@@ -84,9 +93,11 @@ NAN_METHOD(FrameBuffer::Blit) {
 
     FrameBuffer *obj = ObjectWrap::Unwrap<FrameBuffer>(args.Holder());
 
-    cairo_t *cr = cairo_create (obj->screenSurface);
-    cairo_set_source_surface (cr, obj->bufferSurface, 0, 0);
-    cairo_paint (cr);
+    if (obj->drawToBuffer) {
+        cairo_t *cr = cairo_create (obj->screenSurface);
+        cairo_set_source_surface (cr, obj->bufferSurface, 0, 0);
+        cairo_paint (cr);
+    }
 
     NanReturnUndefined();
 }

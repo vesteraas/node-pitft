@@ -1,6 +1,6 @@
 var pitft = require("../pitft");
 
-var fb = new pitft.FrameBuffer("/dev/fb1", true);
+var fb = pitft("/dev/fb1", true);
 fb.clear();
 
 var xMax = fb.size().width;

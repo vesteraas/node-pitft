@@ -20,8 +20,9 @@ using namespace node;
 
 class FrameBuffer : public node::ObjectWrap {
     public:
-        static Persistent<FunctionTemplate> constructor;
-        static void Init(Handle<Object> exports);
+        static Persistent<Function> constructor;
+        static void Init();
+        static NAN_METHOD(NewInstance);
         static NAN_METHOD(New);
         static NAN_METHOD(Size);
         static NAN_METHOD(Data);
