@@ -11,20 +11,22 @@
 #include <sys/mman.h>
 #include <cairo/cairo.h>
 
+#include <v8.h>
+#include <node.h>
 #include <nan.h>
+
+using namespace v8;
+using namespace node;
 
 class FrameBuffer : public node::ObjectWrap {
     public:
-        static void Init(v8::Handle<v8::Object> exports);
-    
-    private:
-        FrameBuffer(const char *path);        
-        ~FrameBuffer();
-
+        static Persistent<FunctionTemplate> constructor;
+        static void Init(Handle<Object> exports);
         static NAN_METHOD(New);
         static NAN_METHOD(Size);
         static NAN_METHOD(Data);
         static NAN_METHOD(Clear);
+        static NAN_METHOD(Blit);
         static NAN_METHOD(Color);
         static NAN_METHOD(Fill);
         static NAN_METHOD(Line);
@@ -32,16 +34,23 @@ class FrameBuffer : public node::ObjectWrap {
         static NAN_METHOD(Circle);
         static NAN_METHOD(Font);
         static NAN_METHOD(Text);
-        static v8::Persistent<v8::Function> constructor;
+        static NAN_METHOD(Image);
+        static cairo_t* getDrawingContext(FrameBuffer *obj);
+    private:
+        FrameBuffer(const char *path);
+        ~FrameBuffer();
 
         int fbfd;
         struct fb_var_screeninfo orig_vinfo;
         struct fb_var_screeninfo vinfo;
         struct fb_fix_screeninfo finfo;
-        long int screensize;
+        long int screenSize;
+
+        char *bbp;
         char *fbp;
 
-        cairo_surface_t *surface;
+        cairo_surface_t *bufferSurface;
+        cairo_surface_t *screenSurface;
 
         double r, g, b;
 
@@ -50,6 +59,8 @@ class FrameBuffer : public node::ObjectWrap {
 
         double textRotation;
         bool textCentered;
+
+        bool drawToBuffer;
 };
 
 #endif
