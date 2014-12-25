@@ -2,43 +2,104 @@
 
 using namespace v8;
 
-Persistent<FunctionTemplate> FrameBuffer::constructor;
+Persistent<Function> FrameBuffer::constructor;
+
+FrameBuffer::FrameBuffer(const char *path) {
+    fbfd = open(path, O_RDWR);
+    if (fbfd == -1) {
+        NanThrowError("Error opening framebuffer device");
+        return;
+    }
+
+    if (ioctl(fbfd, FBIOGET_VSCREENINFO, &vinfo)) {
+        NanThrowError("Error retrieving data from framebuffer");
+        return;
+    }
+    
+    memcpy(&orig_vinfo, &vinfo, sizeof(struct fb_var_screeninfo));
+
+    vinfo.bits_per_pixel = 8;
+    if (ioctl(fbfd, FBIOPUT_VSCREENINFO, &vinfo)) {
+        NanThrowError("Error sending data to framebuffer");
+        return;
+    }
+
+    if (ioctl(fbfd, FBIOGET_FSCREENINFO, &finfo)) {
+        NanThrowError("Error retrieving data from framebuffer");
+        return;
+    }
+
+    screensize = finfo.smem_len;
+    fbp = (char*)mmap(0, 
+                      screensize, 
+                      PROT_READ | PROT_WRITE, 
+                      MAP_SHARED, 
+                      fbfd, 
+                      0);
+
+    if ((int)fbp == -1) {
+        NanThrowError("Error during memory mapping");
+        return;
+    }
+
+    surface = cairo_image_surface_create_for_data ((unsigned char *)fbp, CAIRO_FORMAT_RGB16_565, vinfo.xres, vinfo.yres, cairo_format_stride_for_width(CAIRO_FORMAT_RGB16_565, vinfo.xres));
+}
+
+FrameBuffer::~FrameBuffer() {
+    if ((int)fbp != -1) {
+        munmap(fbp, screensize);
+
+        if (ioctl(fbfd, FBIOPUT_VSCREENINFO, &orig_vinfo)) {
+            NanThrowError("Error restoring framebuffer state");
+        }
+    }
+
+    if (fbfd != -1) {
+        close(fbfd);
+    }
+
+    if (surface) {
+        cairo_surface_destroy(surface);
+    }
+}
 
 void FrameBuffer::Init(Handle<Object> exports) {
     NanScope();
 
-    Local<FunctionTemplate> ctor = NanNew<FunctionTemplate>(FrameBuffer::New);
-    NanAssignPersistent(constructor, ctor);
-    ctor->InstanceTemplate()->SetInternalFieldCount(1);
-    ctor->SetClassName(NanNew("FrameBuffer"));
+    Local<FunctionTemplate> tpl = NanNew<FunctionTemplate>(New);
+    tpl->SetClassName(NanNew("FrameBuffer"));
+    tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
-    NODE_SET_PROTOTYPE_METHOD(ctor, "size", Size);
-    NODE_SET_PROTOTYPE_METHOD(ctor, "data", Data);
-    NODE_SET_PROTOTYPE_METHOD(ctor, "clear", Clear);
-    NODE_SET_PROTOTYPE_METHOD(ctor, "blit", Blit);
-    NODE_SET_PROTOTYPE_METHOD(ctor, "color", Color);
-    NODE_SET_PROTOTYPE_METHOD(ctor, "fill", Fill);
-    NODE_SET_PROTOTYPE_METHOD(ctor, "line", Line);
-    NODE_SET_PROTOTYPE_METHOD(ctor, "rect", Rect);
-    NODE_SET_PROTOTYPE_METHOD(ctor, "circle", Circle);
-    NODE_SET_PROTOTYPE_METHOD(ctor, "font", Font);
-    NODE_SET_PROTOTYPE_METHOD(ctor, "text", Text);
-    NODE_SET_PROTOTYPE_METHOD(ctor, "image", Image);
+    NODE_SET_PROTOTYPE_METHOD(tpl, "size", Size);
+    NODE_SET_PROTOTYPE_METHOD(tpl, "data", Data);
+    NODE_SET_PROTOTYPE_METHOD(tpl, "clear", Clear);
+    NODE_SET_PROTOTYPE_METHOD(tpl, "color", Color);
+    NODE_SET_PROTOTYPE_METHOD(tpl, "fill", Fill);
+    NODE_SET_PROTOTYPE_METHOD(tpl, "line", Line);
+    NODE_SET_PROTOTYPE_METHOD(tpl, "rect", Rect);
+    NODE_SET_PROTOTYPE_METHOD(tpl, "circle", Circle);
+    NODE_SET_PROTOTYPE_METHOD(tpl, "font", Font);
+    NODE_SET_PROTOTYPE_METHOD(tpl, "text", Text);
 
-    exports->Set(NanNew("FrameBuffer"), ctor->GetFunction());
+    NanAssignPersistent(constructor, tpl->GetFunction());
+    exports->Set(NanNew("FrameBuffer"), tpl->GetFunction());
 }
 
 NAN_METHOD(FrameBuffer::New) {
     NanScope();
 
-    v8::String::Utf8Value path(args[0]->ToString());
-    std::string _path = std::string(*path);
-
-    FrameBuffer *obj = new FrameBuffer(_path.c_str());
-    obj->drawToBuffer = args[1]->IsUndefined() ? false : args[1]->BooleanValue();
-
-    obj->Wrap(args.This());
-    NanReturnValue(args.This());
+    if (args.IsConstructCall()) {
+        v8::String::Utf8Value path(args[0]->ToString());
+        std::string _path = std::string(*path);
+        FrameBuffer *obj = new FrameBuffer(_path.c_str());
+        obj->Wrap(args.This());
+        NanReturnValue(args.This());
+    } else {
+        const int argc = 1;
+        Local<Value> argv[argc] = { args[0] };
+        Local<Function> cons = NanNew<Function>(constructor);
+        NanReturnValue(cons->NewInstance(argc, argv));
+    }
 }
 
 NAN_METHOD(FrameBuffer::Size) {
@@ -59,7 +120,7 @@ NAN_METHOD(FrameBuffer::Data) {
 
     FrameBuffer *obj = ObjectWrap::Unwrap<FrameBuffer>(args.Holder());
 
-    Local<Object> bufferObject = NanNewBufferHandle(obj->fbp, obj->screenSize);
+    Local<Object> bufferObject = NanNewBufferHandle(obj->fbp, obj->screensize);
 
     NanReturnValue(bufferObject);
 }
@@ -69,24 +130,7 @@ NAN_METHOD(FrameBuffer::Clear) {
 
     FrameBuffer *obj = ObjectWrap::Unwrap<FrameBuffer>(args.Holder());
 
-    cairo_t *cr = getDrawingContext(obj);
-
-    cairo_set_source_rgb(cr, 0, 0, 0);
-    cairo_paint(cr);
-
-    cairo_destroy(cr);
-
-    NanReturnUndefined();
-}
-
-NAN_METHOD(FrameBuffer::Blit) {
-    NanScope();
-
-    FrameBuffer *obj = ObjectWrap::Unwrap<FrameBuffer>(args.Holder());
-
-    cairo_t *cr = cairo_create (obj->screenSurface);
-    cairo_set_source_surface (cr, obj->bufferSurface, 0, 0);
-    cairo_paint (cr);
+    memset(obj->fbp, 0x00, obj->screensize);
 
     NanReturnUndefined();
 }
@@ -108,9 +152,10 @@ NAN_METHOD(FrameBuffer::Fill) {
 
     FrameBuffer *obj = ObjectWrap::Unwrap<FrameBuffer>(args.Holder());
 
-    cairo_t *cr = getDrawingContext(obj);
+    cairo_t *cr = cairo_create (obj->surface);
 
     cairo_set_source_rgb(cr, obj->r, obj->g, obj->b);
+
     cairo_paint(cr);
 
     cairo_destroy(cr);
@@ -126,11 +171,11 @@ NAN_METHOD(FrameBuffer::Line) {
     double x1 = (args[2]->NumberValue());
     double y1 = (args[3]->NumberValue());
 
-    double w = args[4]->IsUndefined() ? 1 : args[4]->NumberValue();
+    int w = args[4]->IsUndefined() ? 1 : (int)args[4]->NumberValue();
 
     FrameBuffer *obj = ObjectWrap::Unwrap<FrameBuffer>(args.Holder());
 
-    cairo_t *cr = getDrawingContext(obj);
+    cairo_t *cr = cairo_create(obj->surface);
 
     cairo_set_source_rgb(cr, obj->r, obj->g, obj->b);
 
@@ -155,14 +200,14 @@ NAN_METHOD(FrameBuffer::Rect) {
 
     FrameBuffer *obj = ObjectWrap::Unwrap<FrameBuffer>(args.Holder());
 
-    cairo_t *cr = getDrawingContext(obj);
+    cairo_t *cr = cairo_create(obj->surface);
 
     cairo_set_source_rgb(cr, obj->r, obj->g, obj->b);
 
     cairo_rectangle(cr, x, y, w, h);
 
     if (!args[4]->IsUndefined() && args[4]->BooleanValue() == false) {
-        double w = args[5]->IsUndefined() ? 1 : args[5]->NumberValue();
+        int w = args[5]->IsUndefined() ? 1 : (int)args[5]->NumberValue();
         cairo_set_line_width(cr, w);
         cairo_stroke(cr);
     } else if (!args[4]->IsUndefined() && args[4]->BooleanValue() == true) {
@@ -185,14 +230,14 @@ NAN_METHOD(FrameBuffer::Circle) {
 
     FrameBuffer *obj = ObjectWrap::Unwrap<FrameBuffer>(args.Holder());
 
-    cairo_t *cr = getDrawingContext(obj);
+    cairo_t *cr = cairo_create(obj->surface);
 
     cairo_set_source_rgb(cr, obj->r, obj->g, obj->b);
 
     cairo_arc(cr, x, y, radius, 0, 2*3.141592654);
 
     if (!args[3]->IsUndefined() && args[3]->BooleanValue() == false) {
-        double w = args[4]->IsUndefined() ? 1 : args[4]->NumberValue();
+        int w = args[4]->IsUndefined() ? 1 : (int)args[4]->NumberValue();
         cairo_set_line_width(cr, w);
         cairo_stroke(cr);
     } else if (!args[3]->IsUndefined() && args[3]->BooleanValue() == true) {
@@ -233,7 +278,7 @@ NAN_METHOD(FrameBuffer::Text) {
 
     FrameBuffer *obj = ObjectWrap::Unwrap<FrameBuffer>(args.Holder());
 
-    cairo_t *cr = getDrawingContext(obj);
+    cairo_t *cr = cairo_create(obj->surface);
 
     cairo_set_source_rgb(cr, obj->r, obj->g, obj->b);
 
@@ -263,116 +308,3 @@ NAN_METHOD(FrameBuffer::Text) {
     NanReturnUndefined();
 }
 
-NAN_METHOD(FrameBuffer::Image) {
-    NanScope();
-
-    double x = (args[0]->NumberValue());
-    double y = (args[1]->NumberValue());
-
-    v8::String::Utf8Value path(args[2]->ToString());
-    std::string _path = std::string(*path);
-
-    FrameBuffer *obj = ObjectWrap::Unwrap<FrameBuffer>(args.Holder());
-
-    cairo_t *cr = getDrawingContext(obj);
-
-    cairo_surface_t *image = cairo_image_surface_create_from_png(_path.c_str());
-    cairo_set_source_surface(cr, image, x, y);
-    cairo_paint(cr);
-
-    cairo_status_t status = cairo_status(cr);
-
-    if (status != CAIRO_STATUS_SUCCESS) {
-        NanThrowError("Error reading image");
-    }
-
-    cairo_surface_destroy(image);
-    cairo_destroy(cr);
-
-    NanReturnUndefined();
-}
-
-cairo_t* FrameBuffer::getDrawingContext(FrameBuffer *obj) {
-    if (obj->drawToBuffer) {
-        return cairo_create(obj->bufferSurface);
-    } else {
-        return cairo_create(obj->screenSurface);
-    }
-}
-
-FrameBuffer::FrameBuffer(const char *path) {
-    fbfd = open(path, O_RDWR);
-    if (fbfd == -1) {
-        NanThrowError("Error opening framebuffer device");
-        return;
-    }
-
-    if (ioctl(fbfd, FBIOGET_VSCREENINFO, &vinfo)) {
-        NanThrowError("Error retrieving data from framebuffer");
-        return;
-    }
-
-    memcpy(&orig_vinfo, &vinfo, sizeof(struct fb_var_screeninfo));
-
-    vinfo.bits_per_pixel = 8;
-    if (ioctl(fbfd, FBIOPUT_VSCREENINFO, &vinfo)) {
-        NanThrowError("Error sending data to framebuffer");
-        return;
-    }
-
-    if (ioctl(fbfd, FBIOGET_FSCREENINFO, &finfo)) {
-        NanThrowError("Error retrieving data from framebuffer");
-        return;
-    }
-
-    screenSize = finfo.smem_len;
-    fbp = (char*)mmap(0,
-                      screenSize,
-                      PROT_READ | PROT_WRITE,
-                      MAP_SHARED,
-                      fbfd,
-                      0);
-
-    bbp = (char *)malloc(screenSize);
-
-    if ((int)fbp == -1) {
-        NanThrowError("Error during memory mapping");
-        return;
-    }
-
-    bufferSurface = cairo_image_surface_create_for_data ((unsigned char *)bbp, CAIRO_FORMAT_RGB16_565, vinfo.xres, vinfo.yres, cairo_format_stride_for_width(CAIRO_FORMAT_RGB16_565, vinfo.xres));
-
-    if (cairo_surface_status(bufferSurface) != CAIRO_STATUS_SUCCESS) {
-        NanThrowError("Error creating buffer surface");
-        return;
-    }
-
-    screenSurface = cairo_image_surface_create_for_data ((unsigned char *)fbp, CAIRO_FORMAT_RGB16_565, vinfo.xres, vinfo.yres, cairo_format_stride_for_width(CAIRO_FORMAT_RGB16_565, vinfo.xres));
-
-    if (cairo_surface_status(bufferSurface) != CAIRO_STATUS_SUCCESS) {
-        NanThrowError("Error creating screeh surface");
-    }
-}
-
-FrameBuffer::~FrameBuffer() {
-    if ((int)fbp != -1) {
-        free(bbp);
-        munmap(fbp, screenSize);
-
-        if (ioctl(fbfd, FBIOPUT_VSCREENINFO, &orig_vinfo)) {
-            NanThrowError("Error restoring framebuffer state");
-        }
-    }
-
-    if (fbfd != -1) {
-        close(fbfd);
-    }
-
-    if (cairo_surface_status(bufferSurface) == CAIRO_STATUS_SUCCESS) {
-        cairo_surface_destroy(bufferSurface);
-    }
-
-    if (cairo_surface_status(screenSurface) == CAIRO_STATUS_SUCCESS) {
-        cairo_surface_destroy(screenSurface);
-    }
-}
