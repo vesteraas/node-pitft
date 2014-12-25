@@ -261,7 +261,8 @@ NAN_METHOD(FrameBuffer::Font) {
 
     obj->fontName = _fontName.c_str();
     obj->fontSize = args[1]->IsUndefined() ? 12 : args[1]->NumberValue();
-    obj->textRotation = args[2]->IsUndefined() ? 0 : args[2]->NumberValue();
+    obj->textCentered = args[2]->IsUndefined() ? false : args[2]->BooleanValue();
+    obj->textRotation = args[3]->IsUndefined() ? 0 : args[3]->NumberValue();
 
     NanReturnUndefined();
 }
@@ -287,10 +288,17 @@ NAN_METHOD(FrameBuffer::Text) {
 
     cairo_set_font_size(cr, obj->fontSize);
 
-    cairo_move_to(cr, x, y);
+    cairo_translate(cr, x, y);
 
     if (obj->textRotation != 0) {
-        cairo_rotate(cr, obj->textRotation / 57.29);
+        cairo_rotate(cr, obj->textRotation / (180.0 / 3.141592654));
+    }
+
+    if (obj->textCentered) {
+        cairo_text_extents_t extents;
+        cairo_text_extents(cr, _text.c_str(), &extents);
+
+        cairo_move_to(cr, -extents.width/2, extents.height/2);
     }
 
     cairo_show_text(cr, _text.c_str());

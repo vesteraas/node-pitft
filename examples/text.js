@@ -4,15 +4,22 @@ var fb = new pitft.FrameBuffer("/dev/fb1");
 
 fb.clear();
 
+var xMax = fb.size().width;
 var yMax = fb.size().height;
 
 fb.color(1, 1, 1);
 
-var fontSize = 12;
-var rotation = 0;
-for (var y=0; y<yMax; y+=18) {
-    fb.font("fantasy", fontSize, rotation);
-    fb.text(0, y + 12, "This text is rotated " + rotation + " degrees.");
-    fontSize += 2;
-    rotation += 2;
+for (var a=0; a<=90; a+=15) {
+    fb.font("fantasy", 12, false, a);
+    fb.text(20, 20, "Rotated text");
+}
+
+for (var a=0; a<=180; a+=15) {
+    fb.font("fantasy", 24, true, a);
+    fb.text(xMax/2, yMax/2, "Rotated text");
+}
+
+for (var a=180; a<=270; a+=15) {
+    fb.font("fantasy", 12, false, a);
+    fb.text(xMax-20, yMax-20, "Rotated text");
 }
