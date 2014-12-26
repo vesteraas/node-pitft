@@ -12,16 +12,6 @@ var radius = yMax/2 - 10;
 
 var RA = 180/Math.PI;
 
-var hand = function(_fb, x, y, angle, length, width) {
-    var x0 = xMax/2 + Math.sin(angle/RA);
-    var y0 = yMax/2 - Math.cos(angle/RA);
-
-    var x1 = xMax/2 + Math.sin(angle/RA) * length;
-    var y1 = yMax/2 - Math.cos(angle/RA) * length;
-
-    fb.line(x0, y0, x1, y1, width);
-}
-
 var drawDial = function() {
     fb.color(1, 1, 1);
     fb.circle(xMax/2, yMax/2, radius);
@@ -43,6 +33,16 @@ var drawDial = function() {
             fb.line(x0, y0, x1, y1, radius * 0.01);
         }
     }
+}
+
+var hand = function(_fb, x, y, angle, length, width) {
+    var x0 = xMax/2 + Math.sin(angle/RA);
+    var y0 = yMax/2 - Math.cos(angle/RA);
+
+    var x1 = xMax/2 + Math.sin(angle/RA) * length;
+    var y1 = yMax/2 - Math.cos(angle/RA) * length;
+
+    fb.line(x0, y0, x1, y1, width);
 }
 
 var update = function() {

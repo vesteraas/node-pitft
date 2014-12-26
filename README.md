@@ -14,12 +14,35 @@ Prior to installing this module, you must install the [FBTFT drivers by notro](h
 
 You will also need to install the [Cairo](http://cairographics.org) library.  This can be done from the console on your Raspberry Pi:
 
-    sudo apt-get install libcairo2-dev
+```bash
+$ sudo apt-get install libcairo2-dev
+```
 
 Finally, you can install the pitft module itself:
 
+```bash
     npm install pitft
+```
 
 ## Examples
 
 Examples of usage can be found in the [examples](https://github.com/vesteraas/node-pitft/tree/master/examples) directory.
+
+### Screenshots
+#### berries.js
+![berries.js example](/examples/screenshots/berries.png)
+
+#### circles.js
+![circles.js example](/examples/screenshots/circles.png)
+
+#### clock.js
+![clock.js example](/examples/screenshots/clock.png)
+
+#### lines.js
+![lines.js example](/examples/screenshots/lines.png)
+
+#### rectangles.js
+![rectangles.js example](/examples/screenshots/rectangles.png)
+
+#### text.js
+![text.js example](/examples/screenshots/text.png)
