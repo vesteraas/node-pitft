@@ -1,6 +1,8 @@
 var pitft = require("../pitft");
 
-var fb = pitft("/dev/fb1");
+var fb = pitft("/dev/fb1"); // Returns a framebuffer in direct mode.  See the clock.js example for double buffering mode
+
+// Clear the screen buffer
 fb.clear();
 
 var xMax = fb.size().width;
@@ -13,12 +15,13 @@ for (var n=0; n<250; n++) {
     y = parseInt(Math.random() * yMax, 10);
     radius = parseInt(Math.random() * yMax / 2, 10);
 
+    // Create a random color
     r = Math.random();
     g = Math.random();
     b = Math.random();
 
     fb.color(r, g, b);
-    fb.circle(x, y, radius, false, 1);
+    fb.circle(x, y, radius, false, 1); // Draw an outlined circle with a 1 pixel wide border
 }
 
 fb.clear();
@@ -35,5 +38,5 @@ for (var n=0; n<250; n++) {
     b = Math.random();
 
     fb.color(r, g, b);
-    fb.circle(x, y, radius, true);
+    fb.circle(x, y, radius, true); // Draw a filled circle
 }

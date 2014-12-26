@@ -227,8 +227,7 @@ NAN_METHOD(FrameBuffer::Font) {
 
     obj->fontName = _fontName.c_str();
     obj->fontSize = args[1]->IsUndefined() ? 12 : args[1]->NumberValue();
-    obj->textCentered = args[2]->IsUndefined() ? false : args[2]->BooleanValue();
-    obj->textRotation = args[3]->IsUndefined() ? 0 : args[3]->NumberValue();
+    obj->fontBold = args[2]->IsUndefined() ? false : args[2]->BooleanValue();
 
     NanReturnUndefined();
 }
@@ -242,25 +241,30 @@ NAN_METHOD(FrameBuffer::Text) {
     v8::String::Utf8Value text(args[2]->ToString());
     std::string _text = std::string(*text);
 
+    bool textCentered = args[3]->IsUndefined() ? false : args[3]->BooleanValue();
+    double textRotation = args[4]->IsUndefined() ? 0 : args[4]->NumberValue();
+
     FrameBuffer *obj = ObjectWrap::Unwrap<FrameBuffer>(args.Holder());
 
     cairo_t *cr = getDrawingContext(obj);
 
     cairo_set_source_rgb(cr, obj->r, obj->g, obj->b);
 
-    cairo_select_font_face(cr, obj->fontName,
-          CAIRO_FONT_SLANT_NORMAL,
-          CAIRO_FONT_WEIGHT_NORMAL);
+    if (obj->fontBold) {
+        cairo_select_font_face(cr, obj->fontName, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+    } else {
+        cairo_select_font_face(cr, obj->fontName, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+    }
 
     cairo_set_font_size(cr, obj->fontSize);
 
     cairo_translate(cr, x, y);
 
-    if (obj->textRotation != 0) {
-        cairo_rotate(cr, obj->textRotation / (180.0 / 3.141592654));
+    if (textRotation != 0) {
+        cairo_rotate(cr, textRotation / (180.0 / 3.141592654));
     }
 
-    if (obj->textCentered) {
+    if (textCentered) {
         cairo_text_extents_t extents;
         cairo_text_extents(cr, _text.c_str(), &extents);
 

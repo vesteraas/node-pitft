@@ -57,9 +57,7 @@ class FrameBuffer : public node::ObjectWrap {
 
         const char *fontName;
         double fontSize;
-
-        double textRotation;
-        bool textCentered;
+        bool fontBold;
 
         bool drawToBuffer;
 };
