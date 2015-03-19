@@ -9,8 +9,8 @@
     "url": "http://opensource.org/licenses/MIT"
   },
   "dependencies": {
-    "bindings": "*",
-    "nan": "*"
+    "bindings": "^1.2.1",
+    "nan": "^1.7.0"
   },
   "repository": {
     "type": "git",
