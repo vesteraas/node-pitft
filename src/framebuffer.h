@@ -20,9 +20,8 @@ using namespace node;
 
 class FrameBuffer : public node::ObjectWrap {
     public:
-        static Persistent<Function> constructor;
         static void Init();
-        static NAN_METHOD(NewInstance);
+        static v8::Local<v8::Object> NewInstance(v8::Local<v8::Value> arg, v8::Local<v8::Value> arg2);
         static NAN_METHOD(New);
         static NAN_METHOD(Size);
         static NAN_METHOD(Data);
@@ -41,6 +40,7 @@ class FrameBuffer : public node::ObjectWrap {
         FrameBuffer(const char *path);
         ~FrameBuffer();
 
+        static v8::Persistent<v8::Function> constructor;
         int fbfd;
         struct fb_var_screeninfo orig_vinfo;
         struct fb_var_screeninfo vinfo;

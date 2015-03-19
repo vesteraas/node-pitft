@@ -11,30 +11,46 @@ void FrameBuffer::Init() {
     ctor->InstanceTemplate()->SetInternalFieldCount(1);
     ctor->SetClassName(NanNew("FrameBuffer"));
 
-    NODE_SET_PROTOTYPE_METHOD(ctor, "size", Size);
-    NODE_SET_PROTOTYPE_METHOD(ctor, "data", Data);
-    NODE_SET_PROTOTYPE_METHOD(ctor, "clear", Clear);
-    NODE_SET_PROTOTYPE_METHOD(ctor, "blit", Blit);
-    NODE_SET_PROTOTYPE_METHOD(ctor, "color", Color);
-    NODE_SET_PROTOTYPE_METHOD(ctor, "fill", Fill);
-    NODE_SET_PROTOTYPE_METHOD(ctor, "line", Line);
-    NODE_SET_PROTOTYPE_METHOD(ctor, "rect", Rect);
-    NODE_SET_PROTOTYPE_METHOD(ctor, "circle", Circle);
-    NODE_SET_PROTOTYPE_METHOD(ctor, "font", Font);
-    NODE_SET_PROTOTYPE_METHOD(ctor, "text", Text);
-    NODE_SET_PROTOTYPE_METHOD(ctor, "image", Image);
+    ctor->PrototypeTemplate()->Set(NanNew("size"),
+      NanNew<FunctionTemplate>(Size)->GetFunction());
+    ctor->PrototypeTemplate()->Set(NanNew("data"),
+      NanNew<FunctionTemplate>(Data)->GetFunction());
+    ctor->PrototypeTemplate()->Set(NanNew("clear"),
+      NanNew<FunctionTemplate>(Clear)->GetFunction());
+    ctor->PrototypeTemplate()->Set(NanNew("blit"),
+      NanNew<FunctionTemplate>(Blit)->GetFunction());
+    ctor->PrototypeTemplate()->Set(NanNew("color"),
+      NanNew<FunctionTemplate>(Color)->GetFunction());
+    ctor->PrototypeTemplate()->Set(NanNew("fill"),
+      NanNew<FunctionTemplate>(Fill)->GetFunction());
+    ctor->PrototypeTemplate()->Set(NanNew("line"),
+      NanNew<FunctionTemplate>(Line)->GetFunction());
+    ctor->PrototypeTemplate()->Set(NanNew("rect"),
+      NanNew<FunctionTemplate>(Rect)->GetFunction());
+    ctor->PrototypeTemplate()->Set(NanNew("circle"),
+      NanNew<FunctionTemplate>(Circle)->GetFunction());
+    ctor->PrototypeTemplate()->Set(NanNew("font"),
+      NanNew<FunctionTemplate>(Font)->GetFunction());
+    ctor->PrototypeTemplate()->Set(NanNew("text"),
+      NanNew<FunctionTemplate>(Text)->GetFunction());
+    ctor->PrototypeTemplate()->Set(NanNew("image"),
+      NanNew<FunctionTemplate>(Image)->GetFunction());
 
-    constructor = Persistent<Function>::New(ctor->GetFunction());
+    NanAssignPersistent(constructor, ctor->GetFunction());
+
 }
 
-NAN_METHOD(FrameBuffer::NewInstance) {
-  HandleScope scope;
+Local<Object> FrameBuffer::NewInstance(Local<Value> arg, Local<Value> arg2) {
+
+  NanEscapableScope();
 
   const unsigned argc = 2;
-  Handle<Value> argv[2] = { args[0], args[1] };
-  Local<Object> instance = constructor->NewInstance(argc, argv);
+  Local<Value> argv[argc] = { arg, arg2 };
+  Local<Function> cons = NanNew<Function>(constructor);
+  Local<Object> instance = cons->NewInstance(argc, argv);
 
-  NanReturnValue(instance);
+  return NanEscapeScope(instance);
+
 }
 
 NAN_METHOD(FrameBuffer::New) {
