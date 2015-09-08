@@ -113,6 +113,8 @@ NAN_METHOD(FrameBuffer::Blit) {
         cairo_t *cr = cairo_create (obj->screenSurface);
         cairo_set_source_surface (cr, obj->bufferSurface, 0, 0);
         cairo_paint (cr);
+
+        cairo_destroy(cr);
     }
 
     NanReturnUndefined();
