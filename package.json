@@ -1,13 +1,14 @@
 {
   "name": "pitft",
   "description": "A NodeJS module that gives you access to the PiTFT framebuffer",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "main": "pitft.js",
   "author": "Werner Vesteraas <wvesteraas@gmail.com>",
   "license": {
     "type": "MIT",
     "url": "http://opensource.org/licenses/MIT"
   },
+  "keywords": ["raspberry pi", "touchscreen", "pitft"],
   "dependencies": {
     "bindings": "^1.2.1",
     "nan": "^1.7.0"
