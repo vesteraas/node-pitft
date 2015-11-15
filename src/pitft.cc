@@ -4,17 +4,17 @@
 using namespace v8;
 
 NAN_METHOD(CreateObject) {
-  NanScope();
-  NanReturnValue(FrameBuffer::NewInstance(args[0], args[1]));
+  Nan::HandleScope scope;
+  info.GetReturnValue().Set(FrameBuffer::NewInstance(info[0], info[1]));
 }
 
 void InitAll(Handle<Object> exports, Handle<Object> module) {
-  NanScope();
+  Nan::HandleScope scope;
 
   FrameBuffer::Init();
 
-  module->Set(NanNew("exports"),
-      NanNew<FunctionTemplate>(CreateObject)->GetFunction());
+  module->Set(Nan::New("exports").ToLocalChecked(),
+      Nan::New<FunctionTemplate>(CreateObject)->GetFunction());
 }
 
 NODE_MODULE(pitft, InitAll)

@@ -18,7 +18,7 @@
 using namespace v8;
 using namespace node;
 
-class FrameBuffer : public node::ObjectWrap {
+class FrameBuffer : public Nan::ObjectWrap {
     public:
         static void Init();
         static v8::Local<v8::Object> NewInstance(v8::Local<v8::Value> arg, v8::Local<v8::Value> arg2);
@@ -40,7 +40,7 @@ class FrameBuffer : public node::ObjectWrap {
         FrameBuffer(const char *path);
         ~FrameBuffer();
 
-        static v8::Persistent<v8::Function> constructor;
+        static Nan::Persistent<v8::Function> constructor;
         int fbfd;
         struct fb_var_screeninfo orig_vinfo;
         struct fb_var_screeninfo vinfo;
