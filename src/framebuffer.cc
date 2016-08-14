@@ -12,29 +12,29 @@ void FrameBuffer::Init() {
     ctor->SetClassName(Nan::New("FrameBuffer").ToLocalChecked());
 
     ctor->PrototypeTemplate()->Set(Nan::New("size").ToLocalChecked(),
-      Nan::New<FunctionTemplate>(Size)->GetFunction());
+      Nan::New<FunctionTemplate>(Size));
     ctor->PrototypeTemplate()->Set(Nan::New("data").ToLocalChecked(),
-      Nan::New<FunctionTemplate>(Data)->GetFunction());
+      Nan::New<FunctionTemplate>(Data));
     ctor->PrototypeTemplate()->Set(Nan::New("clear").ToLocalChecked(),
-      Nan::New<FunctionTemplate>(Clear)->GetFunction());
+      Nan::New<FunctionTemplate>(Clear));
     ctor->PrototypeTemplate()->Set(Nan::New("blit").ToLocalChecked(),
-      Nan::New<FunctionTemplate>(Blit)->GetFunction());
+      Nan::New<FunctionTemplate>(Blit));
     ctor->PrototypeTemplate()->Set(Nan::New("color").ToLocalChecked(),
-      Nan::New<FunctionTemplate>(Color)->GetFunction());
+      Nan::New<FunctionTemplate>(Color));
     ctor->PrototypeTemplate()->Set(Nan::New("fill").ToLocalChecked(),
-      Nan::New<FunctionTemplate>(Fill)->GetFunction());
+      Nan::New<FunctionTemplate>(Fill));
     ctor->PrototypeTemplate()->Set(Nan::New("line").ToLocalChecked(),
-      Nan::New<FunctionTemplate>(Line)->GetFunction());
+      Nan::New<FunctionTemplate>(Line));
     ctor->PrototypeTemplate()->Set(Nan::New("rect").ToLocalChecked(),
-      Nan::New<FunctionTemplate>(Rect)->GetFunction());
+      Nan::New<FunctionTemplate>(Rect));
     ctor->PrototypeTemplate()->Set(Nan::New("circle").ToLocalChecked(),
-      Nan::New<FunctionTemplate>(Circle)->GetFunction());
+      Nan::New<FunctionTemplate>(Circle));
     ctor->PrototypeTemplate()->Set(Nan::New("font").ToLocalChecked(),
-      Nan::New<FunctionTemplate>(Font)->GetFunction());
+      Nan::New<FunctionTemplate>(Font));
     ctor->PrototypeTemplate()->Set(Nan::New("text").ToLocalChecked(),
-      Nan::New<FunctionTemplate>(Text)->GetFunction());
+      Nan::New<FunctionTemplate>(Text));
     ctor->PrototypeTemplate()->Set(Nan::New("image").ToLocalChecked(),
-      Nan::New<FunctionTemplate>(Image)->GetFunction());
+      Nan::New<FunctionTemplate>(Image));
 
     constructor.Reset(ctor->GetFunction());
 
