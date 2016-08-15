@@ -11,7 +11,7 @@
   "keywords": ["raspberry pi", "touchscreen", "pitft"],
   "dependencies": {
     "bindings": "^1.2.1",
-    "nan": "^2.1.0"
+    "nan": "^2.3.2"
   },
   "repository": {
     "type": "git",
