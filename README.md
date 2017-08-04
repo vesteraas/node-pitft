@@ -3,7 +3,7 @@ pitft
 
 ### A [NodeJS](http://nodejs.org) module for the Adafruit PiTFT family of displays for the [Raspberry Pi](http://www.raspberrypi.org) computer.
 
-With this module, you can draw lines, circles, rectangles, text and images to your Adafruit PiTFT from your NodeJS application.  Includes double buffering support for flicker-free drawing.  This module is only tested on the [2.8" PiTFT](http://www.adafruit.com/product/1601) but should work on other displays from Adafruit.
+With this module, you can draw lines, circles, rectangles, text and images to your Adafruit PiTFT from your NodeJS application.  Includes double buffering support for flicker-free drawing.  This module is only tested on the [2.8" PiTFT](http://www.adafruit.com/product/1601) and the [2.2" PiTFT](https://www.adafruit.com/product/2315) but should work on other displays from Adafruit.
 
 ## Author
   - Werner Vesterås <wvesteraas@gmail.com>
