@@ -8,7 +8,7 @@ fb.clear();
 var xMax = fb.size().width;
 var yMax = fb.size().height;
 
-fb.image(x, y, "raspberry-pi.png"); // Draw the image from the file "raspberry-pi.png" at position x, y
+fb.image(0, 0, "raspberry-pi.png"); // Draw the image from the file "raspberry-pi.png" at position 0, 0
 
 for (var n=0; n<1000; n++) {
     var x = Math.random() * (xMax + 32) - 16;
