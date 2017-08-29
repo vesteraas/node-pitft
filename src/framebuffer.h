@@ -35,6 +35,10 @@ class FrameBuffer : public Nan::ObjectWrap {
         static NAN_METHOD(Font);
         static NAN_METHOD(Text);
         static NAN_METHOD(Image);
+        static NAN_METHOD(PatternCreateLinear);
+        static NAN_METHOD(PatternCreateRGB);
+        static NAN_METHOD(PatternAddColorStop);
+        static NAN_METHOD(PatternDestroy);
         static cairo_t* getDrawingContext(FrameBuffer *obj);
     private:
         FrameBuffer(const char *path);
@@ -54,6 +58,10 @@ class FrameBuffer : public Nan::ObjectWrap {
         cairo_surface_t *screenSurface;
 
         double r, g, b;
+
+        std::vector<cairo_pattern_t*> pattern;
+        size_t usedPattern;
+        bool usePattern;
 
         const char *fontName;
         double fontSize;

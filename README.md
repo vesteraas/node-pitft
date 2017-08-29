@@ -46,3 +46,6 @@ Instead of writing a lot of documentation, I've written a few example programs. 
 
 #### [text.js](/examples/text.js)
 ![text.js example](/examples/screenshots/text.png)
+
+#### [pattern.js](/examples/pattern.js)
+![pattern.js example](/examples/screenshots/pattern.png)
