@@ -399,6 +399,7 @@ NAN_METHOD(FrameBuffer::Text) {
 
     bool textCentered = info[3]->IsUndefined() ? false : info[3]->BooleanValue();
     double textRotation = info[4]->IsUndefined() ? 0 : info[4]->NumberValue();
+    bool textRight = info[5]->IsUndefined() ? false : info[5]->BooleanValue();
 
     FrameBuffer *obj = Nan::ObjectWrap::Unwrap<FrameBuffer>(info.Holder());
 
@@ -425,6 +426,11 @@ NAN_METHOD(FrameBuffer::Text) {
         cairo_text_extents(cr, _text.c_str(), &extents);
 
         cairo_move_to(cr, -extents.width/2, extents.height/2);
+    } else if (textRight) {
+        cairo_text_extents_t extents;
+        cairo_text_extents(cr, _text.c_str(), &extents);
+
+        cairo_move_to(cr, -extents.width, 0);
     }
 
     cairo_show_text(cr, _text.c_str());
