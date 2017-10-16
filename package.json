@@ -3,6 +3,7 @@
   "description": "A NodeJS module that gives you access to the PiTFT framebuffer",
   "version": "0.0.15",
   "main": "pitft.js",
+  "typings": "pitft.d.ts",
   "author": "Werner Vesteraas <wvesteraas@gmail.com>",
   "license": {
     "type": "MIT",

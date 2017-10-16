@@ -35,6 +35,14 @@ void FrameBuffer::Init() {
       Nan::New<FunctionTemplate>(Text));
     ctor->PrototypeTemplate()->Set(Nan::New("image").ToLocalChecked(),
       Nan::New<FunctionTemplate>(Image));
+    ctor->PrototypeTemplate()->Set(Nan::New("patternCreateLinear").ToLocalChecked(),
+      Nan::New<FunctionTemplate>(PatternCreateLinear));
+    ctor->PrototypeTemplate()->Set(Nan::New("patternCreateRGB").ToLocalChecked(),
+      Nan::New<FunctionTemplate>(PatternCreateRGB));
+    ctor->PrototypeTemplate()->Set(Nan::New("patternAddColorStop").ToLocalChecked(),
+      Nan::New<FunctionTemplate>(PatternAddColorStop));
+    ctor->PrototypeTemplate()->Set(Nan::New("patternDestroy").ToLocalChecked(),
+      Nan::New<FunctionTemplate>(PatternDestroy));
 
     constructor.Reset(ctor->GetFunction());
 
@@ -125,12 +133,142 @@ NAN_METHOD(FrameBuffer::Color) {
 
     FrameBuffer *obj = Nan::ObjectWrap::Unwrap<FrameBuffer>(info.Holder());
 
-    obj->r = (info[0]->NumberValue());
-    obj->g = (info[1]->NumberValue());
-    obj->b = (info[2]->NumberValue());
+    if (info[1]->IsUndefined()) {
+        obj->usedPattern = (info[0]->NumberValue());
+        obj->usePattern = true;
+    } else {
+        obj->r = (info[0]->NumberValue());
+        obj->g = (info[1]->NumberValue());
+        obj->b = (info[2]->NumberValue());
+        obj->usePattern = false;
+    }
 
     return;
 }
+
+NAN_METHOD(FrameBuffer::PatternCreateLinear) {
+    Nan::HandleScope scope;
+
+    FrameBuffer *obj = Nan::ObjectWrap::Unwrap<FrameBuffer>(info.Holder());
+
+    double x0, y0, x1, y1;
+    size_t pos;
+
+    if (info[4]->IsUndefined()) {
+        x0 = (info[0]->NumberValue());
+        y0 = (info[1]->NumberValue());
+        x1 = (info[2]->NumberValue());
+        y1 = (info[3]->NumberValue());
+        obj->pattern.push_back(cairo_pattern_create_linear(x0, y0, x1, y1));
+        pos = obj->pattern.size() - 1;
+    } else {
+        pos = (info[0]->NumberValue());
+        x0 = (info[1]->NumberValue());
+        y0 = (info[2]->NumberValue());
+        x1 = (info[3]->NumberValue());
+        y1 = (info[4]->NumberValue());
+
+        while (obj->pattern.size() <= pos) {
+            obj->pattern.push_back(nullptr);
+        }
+
+        if (obj->pattern[pos] != nullptr) {
+            cairo_pattern_destroy(obj->pattern[pos]);
+        }
+
+        obj->pattern[pos] = cairo_pattern_create_linear(x0, y0, x1, y1);
+    }
+
+    info.GetReturnValue().Set(pos);
+}
+
+NAN_METHOD(FrameBuffer::PatternCreateRGB) {
+    Nan::HandleScope scope;
+
+    FrameBuffer *obj = Nan::ObjectWrap::Unwrap<FrameBuffer>(info.Holder());
+
+    double r, g, b, a;
+    size_t pos;
+
+    if (info[4]->IsUndefined()) {
+        r = (info[0]->NumberValue());
+        g = (info[1]->NumberValue());
+        b = (info[2]->NumberValue());
+        a = info[3]->IsUndefined() ? 1 : (info[3]->NumberValue());
+        obj->pattern.push_back(cairo_pattern_create_rgba(r, g, b, a));
+        pos = obj->pattern.size() - 1;
+    } else {
+        pos = (info[0]->NumberValue());
+        r = (info[1]->NumberValue());
+        g = (info[2]->NumberValue());
+        b = (info[3]->NumberValue());
+        a = info[4]->IsUndefined() ? 1 : (info[4]->NumberValue());
+
+        while (obj->pattern.size() <= pos) {
+            obj->pattern.push_back(nullptr);
+        }
+
+        if (obj->pattern[pos] != nullptr) {
+            cairo_pattern_destroy(obj->pattern[pos]);
+        }
+
+        obj->pattern[pos] = cairo_pattern_create_rgba(r, g, b, a);
+    }
+
+    info.GetReturnValue().Set(pos);
+}
+
+NAN_METHOD(FrameBuffer::PatternAddColorStop) {
+    Nan::HandleScope scope;
+
+    FrameBuffer *obj = Nan::ObjectWrap::Unwrap<FrameBuffer>(info.Holder());
+
+    size_t patternIndex = (info[0]->NumberValue());
+
+    double offset = (info[1]->NumberValue());
+    double r = (info[2]->NumberValue());
+    double g = (info[3]->NumberValue());
+    double b = (info[4]->NumberValue());
+
+    if (!info[5]->IsUndefined()) {
+        double alpha = info[5]->IsUndefined() ? 1 : info[5]->NumberValue();
+        cairo_pattern_add_color_stop_rgba(obj->pattern[patternIndex], offset, r, g, b, alpha);
+    } else {
+        cairo_pattern_add_color_stop_rgb(obj->pattern[patternIndex], offset, r, g, b);
+    }
+
+    return;
+}
+
+NAN_METHOD(FrameBuffer::PatternDestroy) {
+    Nan::HandleScope scope;
+
+    FrameBuffer *obj = Nan::ObjectWrap::Unwrap<FrameBuffer>(info.Holder());
+
+    size_t patternIndex = (info[0]->NumberValue());
+
+    cairo_pattern_destroy(obj->pattern[patternIndex]);
+
+    obj->pattern[patternIndex] = nullptr;
+
+    return;
+}
+
+#define cairoSetSourceMacro(cr, obj) \
+    if (obj->usePattern) { \
+        if (obj->pattern.size() <= obj->usedPattern) { \
+            Nan::ThrowError("Error using pattern, index not exists"); return; \
+        } \
+        if (obj->pattern[obj->usedPattern] == nullptr) { \
+            Nan::ThrowError("Error using pattern, pattern is destroyed"); return; \
+        } \
+        if (cairo_pattern_status(obj->pattern[obj->usedPattern]) != CAIRO_STATUS_SUCCESS) { \
+            Nan::ThrowError("Error using pattern, pattern status invalid"); return; \
+        } \
+        cairo_set_source(cr, obj->pattern[obj->usedPattern]); \
+    } else { \
+        cairo_set_source_rgb(cr, obj->r, obj->g, obj->b); \
+    }
 
 NAN_METHOD(FrameBuffer::Fill) {
     Nan::HandleScope scope;
@@ -139,7 +277,7 @@ NAN_METHOD(FrameBuffer::Fill) {
 
     cairo_t *cr = getDrawingContext(obj);
 
-    cairo_set_source_rgb(cr, obj->r, obj->g, obj->b);
+    cairoSetSourceMacro(cr, obj);
     cairo_paint(cr);
 
     cairo_destroy(cr);
@@ -161,7 +299,7 @@ NAN_METHOD(FrameBuffer::Line) {
 
     cairo_t *cr = getDrawingContext(obj);
 
-    cairo_set_source_rgb(cr, obj->r, obj->g, obj->b);
+    cairoSetSourceMacro(cr, obj);
 
     cairo_move_to(cr, x0, y0);
     cairo_line_to(cr, x1, y1);
@@ -186,7 +324,7 @@ NAN_METHOD(FrameBuffer::Rect) {
 
     cairo_t *cr = getDrawingContext(obj);
 
-    cairo_set_source_rgb(cr, obj->r, obj->g, obj->b);
+    cairoSetSourceMacro(cr, obj);
 
     cairo_rectangle(cr, x, y, w, h);
 
@@ -216,7 +354,7 @@ NAN_METHOD(FrameBuffer::Circle) {
 
     cairo_t *cr = getDrawingContext(obj);
 
-    cairo_set_source_rgb(cr, obj->r, obj->g, obj->b);
+    cairoSetSourceMacro(cr, obj);
 
     cairo_arc(cr, x, y, radius, 0, 2*3.141592654);
 
@@ -261,12 +399,13 @@ NAN_METHOD(FrameBuffer::Text) {
 
     bool textCentered = info[3]->IsUndefined() ? false : info[3]->BooleanValue();
     double textRotation = info[4]->IsUndefined() ? 0 : info[4]->NumberValue();
+    bool textRight = info[5]->IsUndefined() ? false : info[5]->BooleanValue();
 
     FrameBuffer *obj = Nan::ObjectWrap::Unwrap<FrameBuffer>(info.Holder());
 
     cairo_t *cr = getDrawingContext(obj);
 
-    cairo_set_source_rgb(cr, obj->r, obj->g, obj->b);
+    cairoSetSourceMacro(cr, obj);
 
     if (obj->fontBold) {
         cairo_select_font_face(cr, obj->fontName, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
@@ -287,6 +426,11 @@ NAN_METHOD(FrameBuffer::Text) {
         cairo_text_extents(cr, _text.c_str(), &extents);
 
         cairo_move_to(cr, -extents.width/2, extents.height/2);
+    } else if (textRight) {
+        cairo_text_extents_t extents;
+        cairo_text_extents(cr, _text.c_str(), &extents);
+
+        cairo_move_to(cr, -extents.width, 0);
     }
 
     cairo_show_text(cr, _text.c_str());
@@ -388,6 +532,13 @@ FrameBuffer::FrameBuffer(const char *path) {
 }
 
 FrameBuffer::~FrameBuffer() {
+    size_t patternSize = pattern.size();
+    for(size_t i = 0; i < patternSize; i++) {
+      if (pattern[i] != nullptr) {
+        cairo_pattern_destroy(pattern[i]);
+      }
+    }
+
     if ((int)fbp != -1) {
         free(bbp);
         munmap(fbp, screenSize);

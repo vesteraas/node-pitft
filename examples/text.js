@@ -24,3 +24,6 @@ for (var a=180; a<=270; a+=15) {
     fb.font("fantasy", 12); // Use the "fantasy" font with size 12
     fb.text(xMax-20, yMax-20, "Rotated text", false, a); // Draw the text non-centered, rotated _a_ degrees
 }
+
+fb.font("fantasy", 16, true); // Use the "fantasy" font with size 16 and bold
+fb.text(xMax-20, 20, "Right bold text", false, 0, true); // Draw the text non-centered, non-rotated, right
