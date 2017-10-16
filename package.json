@@ -1,7 +1,7 @@
 {
   "name": "pitft",
   "description": "A NodeJS module that gives you access to the PiTFT framebuffer",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "main": "pitft.js",
   "typings": "pitft.d.ts",
   "author": "Werner Vesteraas <wvesteraas@gmail.com>",
