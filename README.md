@@ -7,6 +7,9 @@ With this module, you can draw lines, circles, rectangles, text and images to yo
 
 ## Author
   - Werner Vesterås <wvesteraas@gmail.com>
+  
+## Contributors
+  - Peter Müller <https://crycode.de/>
 
 ## Installation
 
