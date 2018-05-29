@@ -55,7 +55,7 @@ Local<Object> FrameBuffer::NewInstance(Local<Value> arg, Local<Value> arg2) {
   const unsigned argc = 2;
   Local<Value> argv[argc] = { arg, arg2 };
   Local<Function> cons = Nan::New<Function>(constructor);
-  Local<Object> instance = cons->NewInstance(argc, argv);
+  Local<Object> instance = Nan::NewInstance(cons, argc, argv).ToLocalChecked();
 
   return scope.Escape(instance);
 
@@ -64,7 +64,7 @@ Local<Object> FrameBuffer::NewInstance(Local<Value> arg, Local<Value> arg2) {
 NAN_METHOD(FrameBuffer::New) {
     Nan::HandleScope scope;
 
-    v8::String::Utf8Value path(info[0]->ToString());
+    Nan::Utf8String path(info[0]->ToString());
     std::string _path = std::string(*path);
 
     FrameBuffer *obj = new FrameBuffer(_path.c_str());
@@ -378,7 +378,7 @@ NAN_METHOD(FrameBuffer::Font) {
 
     FrameBuffer *obj = Nan::ObjectWrap::Unwrap<FrameBuffer>(info.Holder());
 
-    v8::String::Utf8Value fontName(info[0]->ToString());
+    Nan::Utf8String fontName(info[0]->ToString());
     std::string _fontName = std::string(*fontName);
 
     obj->fontName = _fontName.c_str();
@@ -394,7 +394,7 @@ NAN_METHOD(FrameBuffer::Text) {
     double x = (info[0]->NumberValue());
     double y = (info[1]->NumberValue());
 
-    v8::String::Utf8Value text(info[2]->ToString());
+    Nan::Utf8String text(info[2]->ToString());
     std::string _text = std::string(*text);
 
     bool textCentered = info[3]->IsUndefined() ? false : info[3]->BooleanValue();
@@ -446,7 +446,7 @@ NAN_METHOD(FrameBuffer::Image) {
     double x = (info[0]->NumberValue());
     double y = (info[1]->NumberValue());
 
-    v8::String::Utf8Value path(info[2]->ToString());
+    Nan::Utf8String path(info[2]->ToString());
     std::string _path = std::string(*path);
 
     FrameBuffer *obj = Nan::ObjectWrap::Unwrap<FrameBuffer>(info.Holder());
