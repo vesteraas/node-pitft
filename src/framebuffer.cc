@@ -44,7 +44,7 @@ void FrameBuffer::Init() {
     ctor->PrototypeTemplate()->Set(Nan::New("patternDestroy").ToLocalChecked(),
       Nan::New<FunctionTemplate>(PatternDestroy));
 
-    constructor.Reset(ctor->GetFunction());
+    constructor.Reset(Nan::GetFunction(ctor).ToLocalChecked());
 
 }
 
@@ -64,11 +64,11 @@ Local<Object> FrameBuffer::NewInstance(Local<Value> arg, Local<Value> arg2) {
 NAN_METHOD(FrameBuffer::New) {
     Nan::HandleScope scope;
 
-    Nan::Utf8String path(info[0]->ToString());
+    Nan::Utf8String path(info[0]->ToString(Nan::GetCurrentContext()).FromMaybe(v8::Local<v8::String>()));
     std::string _path = std::string(*path);
 
     FrameBuffer *obj = new FrameBuffer(_path.c_str());
-    obj->drawToBuffer = info[1]->IsUndefined() ? false : info[1]->BooleanValue();
+    obj->drawToBuffer = info[1]->IsUndefined() ? false : Nan::To<bool>(info[1]).FromJust();
 
     obj->Wrap(info.This());
     info.GetReturnValue().Set(info.This());
@@ -81,8 +81,8 @@ NAN_METHOD(FrameBuffer::Size) {
 
     Local<Object> sizeObject = Nan::New<Object>();
 
-    sizeObject->Set(Nan::New<String>("width").ToLocalChecked(), Nan::New<Number>(obj->vinfo.xres));
-    sizeObject->Set(Nan::New<String>("height").ToLocalChecked(), Nan::New<Number>(obj->vinfo.yres));
+    Nan::Set(sizeObject, Nan::New("width").ToLocalChecked(), Nan::New(obj->vinfo.xres));
+    Nan::Set(sizeObject, Nan::New("height").ToLocalChecked(), Nan::New(obj->vinfo.yres));
 
     info.GetReturnValue().Set(sizeObject);
 }
@@ -134,12 +134,12 @@ NAN_METHOD(FrameBuffer::Color) {
     FrameBuffer *obj = Nan::ObjectWrap::Unwrap<FrameBuffer>(info.Holder());
 
     if (info[1]->IsUndefined()) {
-        obj->usedPattern = (info[0]->NumberValue());
+        obj->usedPattern = (info[0]->NumberValue(Nan::GetCurrentContext()).FromJust());
         obj->usePattern = true;
     } else {
-        obj->r = (info[0]->NumberValue());
-        obj->g = (info[1]->NumberValue());
-        obj->b = (info[2]->NumberValue());
+        obj->r = (info[0]->NumberValue(Nan::GetCurrentContext()).FromJust());
+        obj->g = (info[1]->NumberValue(Nan::GetCurrentContext()).FromJust());
+        obj->b = (info[2]->NumberValue(Nan::GetCurrentContext()).FromJust());
         obj->usePattern = false;
     }
 
@@ -155,18 +155,18 @@ NAN_METHOD(FrameBuffer::PatternCreateLinear) {
     size_t pos;
 
     if (info[4]->IsUndefined()) {
-        x0 = (info[0]->NumberValue());
-        y0 = (info[1]->NumberValue());
-        x1 = (info[2]->NumberValue());
-        y1 = (info[3]->NumberValue());
+        x0 = (info[0]->NumberValue(Nan::GetCurrentContext()).FromJust());
+        y0 = (info[1]->NumberValue(Nan::GetCurrentContext()).FromJust());
+        x1 = (info[2]->NumberValue(Nan::GetCurrentContext()).FromJust());
+        y1 = (info[3]->NumberValue(Nan::GetCurrentContext()).FromJust());
         obj->pattern.push_back(cairo_pattern_create_linear(x0, y0, x1, y1));
         pos = obj->pattern.size() - 1;
     } else {
-        pos = (info[0]->NumberValue());
-        x0 = (info[1]->NumberValue());
-        y0 = (info[2]->NumberValue());
-        x1 = (info[3]->NumberValue());
-        y1 = (info[4]->NumberValue());
+        pos = (info[0]->NumberValue(Nan::GetCurrentContext()).FromJust());
+        x0 = (info[1]->NumberValue(Nan::GetCurrentContext()).FromJust());
+        y0 = (info[2]->NumberValue(Nan::GetCurrentContext()).FromJust());
+        x1 = (info[3]->NumberValue(Nan::GetCurrentContext()).FromJust());
+        y1 = (info[4]->NumberValue(Nan::GetCurrentContext()).FromJust());
 
         while (obj->pattern.size() <= pos) {
             obj->pattern.push_back(nullptr);
@@ -191,18 +191,18 @@ NAN_METHOD(FrameBuffer::PatternCreateRGB) {
     size_t pos;
 
     if (info[4]->IsUndefined()) {
-        r = (info[0]->NumberValue());
-        g = (info[1]->NumberValue());
-        b = (info[2]->NumberValue());
-        a = info[3]->IsUndefined() ? 1 : (info[3]->NumberValue());
+        r = (info[0]->NumberValue(Nan::GetCurrentContext()).FromJust());
+        g = (info[1]->NumberValue(Nan::GetCurrentContext()).FromJust());
+        b = (info[2]->NumberValue(Nan::GetCurrentContext()).FromJust());
+        a = info[3]->IsUndefined() ? 1 : (info[3]->NumberValue(Nan::GetCurrentContext()).FromJust());
         obj->pattern.push_back(cairo_pattern_create_rgba(r, g, b, a));
         pos = obj->pattern.size() - 1;
     } else {
-        pos = (info[0]->NumberValue());
-        r = (info[1]->NumberValue());
-        g = (info[2]->NumberValue());
-        b = (info[3]->NumberValue());
-        a = info[4]->IsUndefined() ? 1 : (info[4]->NumberValue());
+        pos = (info[0]->NumberValue(Nan::GetCurrentContext()).FromJust());
+        r = (info[1]->NumberValue(Nan::GetCurrentContext()).FromJust());
+        g = (info[2]->NumberValue(Nan::GetCurrentContext()).FromJust());
+        b = (info[3]->NumberValue(Nan::GetCurrentContext()).FromJust());
+        a = info[4]->IsUndefined() ? 1 : (info[4]->NumberValue(Nan::GetCurrentContext()).FromJust());
 
         while (obj->pattern.size() <= pos) {
             obj->pattern.push_back(nullptr);
@@ -223,15 +223,15 @@ NAN_METHOD(FrameBuffer::PatternAddColorStop) {
 
     FrameBuffer *obj = Nan::ObjectWrap::Unwrap<FrameBuffer>(info.Holder());
 
-    size_t patternIndex = (info[0]->NumberValue());
+    size_t patternIndex = (info[0]->NumberValue(Nan::GetCurrentContext()).FromJust());
 
-    double offset = (info[1]->NumberValue());
-    double r = (info[2]->NumberValue());
-    double g = (info[3]->NumberValue());
-    double b = (info[4]->NumberValue());
+    double offset = (info[1]->NumberValue(Nan::GetCurrentContext()).FromJust());
+    double r = (info[2]->NumberValue(Nan::GetCurrentContext()).FromJust());
+    double g = (info[3]->NumberValue(Nan::GetCurrentContext()).FromJust());
+    double b = (info[4]->NumberValue(Nan::GetCurrentContext()).FromJust());
 
     if (!info[5]->IsUndefined()) {
-        double alpha = info[5]->IsUndefined() ? 1 : info[5]->NumberValue();
+        double alpha = info[5]->IsUndefined() ? 1 : info[5]->NumberValue(Nan::GetCurrentContext()).FromJust();
         cairo_pattern_add_color_stop_rgba(obj->pattern[patternIndex], offset, r, g, b, alpha);
     } else {
         cairo_pattern_add_color_stop_rgb(obj->pattern[patternIndex], offset, r, g, b);
@@ -245,7 +245,7 @@ NAN_METHOD(FrameBuffer::PatternDestroy) {
 
     FrameBuffer *obj = Nan::ObjectWrap::Unwrap<FrameBuffer>(info.Holder());
 
-    size_t patternIndex = (info[0]->NumberValue());
+    size_t patternIndex = (info[0]->NumberValue(Nan::GetCurrentContext()).FromJust());
 
     cairo_pattern_destroy(obj->pattern[patternIndex]);
 
@@ -288,12 +288,12 @@ NAN_METHOD(FrameBuffer::Fill) {
 NAN_METHOD(FrameBuffer::Line) {
     Nan::HandleScope scope;
 
-    double x0 = (info[0]->NumberValue());
-    double y0 = (info[1]->NumberValue());
-    double x1 = (info[2]->NumberValue());
-    double y1 = (info[3]->NumberValue());
+    double x0 = (info[0]->NumberValue(Nan::GetCurrentContext()).FromJust());
+    double y0 = (info[1]->NumberValue(Nan::GetCurrentContext()).FromJust());
+    double x1 = (info[2]->NumberValue(Nan::GetCurrentContext()).FromJust());
+    double y1 = (info[3]->NumberValue(Nan::GetCurrentContext()).FromJust());
 
-    double w = info[4]->IsUndefined() ? 1 : info[4]->NumberValue();
+    double w = info[4]->IsUndefined() ? 1 : info[4]->NumberValue(Nan::GetCurrentContext()).FromJust();
 
     FrameBuffer *obj = Nan::ObjectWrap::Unwrap<FrameBuffer>(info.Holder());
 
@@ -315,10 +315,10 @@ NAN_METHOD(FrameBuffer::Line) {
 NAN_METHOD(FrameBuffer::Rect) {
     Nan::HandleScope scope;
 
-    double x = (info[0]->NumberValue());
-    double y = (info[1]->NumberValue());
-    double w = (info[2]->NumberValue());
-    double h = (info[3]->NumberValue());
+    double x = (info[0]->NumberValue(Nan::GetCurrentContext()).FromJust());
+    double y = (info[1]->NumberValue(Nan::GetCurrentContext()).FromJust());
+    double w = (info[2]->NumberValue(Nan::GetCurrentContext()).FromJust());
+    double h = (info[3]->NumberValue(Nan::GetCurrentContext()).FromJust());
 
     FrameBuffer *obj = Nan::ObjectWrap::Unwrap<FrameBuffer>(info.Holder());
 
@@ -328,11 +328,11 @@ NAN_METHOD(FrameBuffer::Rect) {
 
     cairo_rectangle(cr, x, y, w, h);
 
-    if (!info[4]->IsUndefined() && info[4]->BooleanValue() == false) {
-        double w = info[5]->IsUndefined() ? 1 : info[5]->NumberValue();
+    if (!info[4]->IsUndefined() && Nan::To<bool>(info[5]).FromJust() == false) {
+        double w = info[5]->IsUndefined() ? 1 : info[5]->NumberValue(Nan::GetCurrentContext()).FromJust();
         cairo_set_line_width(cr, w);
         cairo_stroke(cr);
-    } else if (!info[4]->IsUndefined() && info[4]->BooleanValue() == true) {
+    } else if (!info[4]->IsUndefined() && Nan::To<bool>(info[4]).FromJust() == true) {
         cairo_fill(cr);
     } else {
         cairo_fill(cr);
@@ -346,9 +346,9 @@ NAN_METHOD(FrameBuffer::Rect) {
 NAN_METHOD(FrameBuffer::Circle) {
     Nan::HandleScope scope;
 
-    double x = (info[0]->NumberValue());
-    double y = (info[1]->NumberValue());
-    double radius = (info[2]->NumberValue());
+    double x = (info[0]->NumberValue(Nan::GetCurrentContext()).FromJust());
+    double y = (info[1]->NumberValue(Nan::GetCurrentContext()).FromJust());
+    double radius = (info[2]->NumberValue(Nan::GetCurrentContext()).FromJust());
 
     FrameBuffer *obj = Nan::ObjectWrap::Unwrap<FrameBuffer>(info.Holder());
 
@@ -358,11 +358,11 @@ NAN_METHOD(FrameBuffer::Circle) {
 
     cairo_arc(cr, x, y, radius, 0, 2*3.141592654);
 
-    if (!info[3]->IsUndefined() && info[3]->BooleanValue() == false) {
-        double w = info[4]->IsUndefined() ? 1 : info[4]->NumberValue();
+    if (!info[3]->IsUndefined() && Nan::To<bool>(info[3]).FromJust() == false) {
+        double w = info[4]->IsUndefined() ? 1 : info[4]->NumberValue(Nan::GetCurrentContext()).FromJust();
         cairo_set_line_width(cr, w);
         cairo_stroke(cr);
-    } else if (!info[3]->IsUndefined() && info[3]->BooleanValue() == true) {
+    } else if (!info[3]->IsUndefined() && Nan::To<bool>(info[3]).FromJust() == true) {
         cairo_fill(cr);
     } else {
         cairo_fill(cr);
@@ -378,12 +378,12 @@ NAN_METHOD(FrameBuffer::Font) {
 
     FrameBuffer *obj = Nan::ObjectWrap::Unwrap<FrameBuffer>(info.Holder());
 
-    Nan::Utf8String fontName(info[0]->ToString());
+    Nan::Utf8String fontName(info[0]->ToString(Nan::GetCurrentContext()).FromMaybe(v8::Local<v8::String>()));
     std::string _fontName = std::string(*fontName);
 
     obj->fontName = _fontName.c_str();
-    obj->fontSize = info[1]->IsUndefined() ? 12 : info[1]->NumberValue();
-    obj->fontBold = info[2]->IsUndefined() ? false : info[2]->BooleanValue();
+    obj->fontSize = info[1]->IsUndefined() ? 12 : info[1]->NumberValue(Nan::GetCurrentContext()).FromJust();
+    obj->fontBold = info[2]->IsUndefined() ? false : Nan::To<bool>(info[2]).FromJust();
 
     return;
 }
@@ -391,15 +391,15 @@ NAN_METHOD(FrameBuffer::Font) {
 NAN_METHOD(FrameBuffer::Text) {
     Nan::HandleScope scope;
 
-    double x = (info[0]->NumberValue());
-    double y = (info[1]->NumberValue());
+    double x = (info[0]->NumberValue(Nan::GetCurrentContext()).FromJust());
+    double y = (info[1]->NumberValue(Nan::GetCurrentContext()).FromJust());
 
-    Nan::Utf8String text(info[2]->ToString());
+    Nan::Utf8String text(info[2]->ToString(Nan::GetCurrentContext()).FromMaybe(v8::Local<v8::String>()));
     std::string _text = std::string(*text);
 
-    bool textCentered = info[3]->IsUndefined() ? false : info[3]->BooleanValue();
-    double textRotation = info[4]->IsUndefined() ? 0 : info[4]->NumberValue();
-    bool textRight = info[5]->IsUndefined() ? false : info[5]->BooleanValue();
+    bool textCentered = info[3]->IsUndefined() ? false : Nan::To<bool>(info[3]).FromJust();
+    double textRotation = info[4]->IsUndefined() ? 0 : info[4]->NumberValue(Nan::GetCurrentContext()).FromJust();
+    bool textRight = info[5]->IsUndefined() ? false : Nan::To<bool>(info[5]).FromJust();
 
     FrameBuffer *obj = Nan::ObjectWrap::Unwrap<FrameBuffer>(info.Holder());
 
@@ -443,10 +443,10 @@ NAN_METHOD(FrameBuffer::Text) {
 NAN_METHOD(FrameBuffer::Image) {
     Nan::HandleScope scope;
 
-    double x = (info[0]->NumberValue());
-    double y = (info[1]->NumberValue());
+    double x = (info[0]->NumberValue(Nan::GetCurrentContext()).FromJust());
+    double y = (info[1]->NumberValue(Nan::GetCurrentContext()).FromJust());
 
-    Nan::Utf8String path(info[2]->ToString());
+    Nan::Utf8String path(info[2]->ToString(Nan::GetCurrentContext()).FromMaybe(v8::Local<v8::String>()));
     std::string _path = std::string(*path);
 
     FrameBuffer *obj = Nan::ObjectWrap::Unwrap<FrameBuffer>(info.Holder());
